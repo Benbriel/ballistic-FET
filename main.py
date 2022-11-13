@@ -5,28 +5,22 @@ import numpy as np
 from utils import *
 
 # Define Constants
-hbar /= eV
-e /= eV
 A = 1.
 E_F = -5. * eV
-mu_s = 1
-mu_d = 1
-tau_d = 1.
-tau_s = 1.
-# T = 1
-N0 = 1
-C_es = 1
-A = 1.
+E_C = -4.7 * eV
+# tau_d = tau_s -> 0.
+C_es = 0.1 * 1e-15                  # F
 m = 1.
-infty = 100.
-beta = lambda T: 1/(k*T) * eV
+beta = lambda T: 1/(k*T) * eV       # eV^-1
+mu_s = lambda V_DS: E_F + 1
+mu_d = 1
 
 def f(E, mu, T):
-    return 1 / (1 + np.exp(np.clip((E - mu) * beta(T), -100, 1e2)))
+    return 1 / (1 + np.exp(np.clip((E - mu) * beta(T), -np.inf, 1e2)))
 
 
-def U_potential(N, q=1):
-    return q**2 *  (N - N0) / C_es
+def U_potential(N, q=e):
+    return q**2 *  (N - N0) / C_es / eV
 
 
 def g(E, E_n, nmax=0):
@@ -34,7 +28,7 @@ def g(E, E_n, nmax=0):
 
 
 def calc_N(U, T):
-    e_dist = lambda E: (tau_d * f(E, mu_s, T) + tau_s * f(E, mu_d, T)) / (tau_s + tau_d)
+    e_dist = lambda E: f(E, mu_s, T) + f(E, mu_d, T)
     g_dist = lambda E: g(E - U, 0) * e_dist(E)
     integrand = lambda E: g_dist(E)
     E_plot = np.linspace(-20, 20, 1000)
@@ -57,7 +51,7 @@ def get_U_optimized(U_guess, T, q, th=1e-4, max_iter=10):
 
 
 def calc_I(U, T, q):
-    e_dist = lambda E: (f(E, mu_s, T) - f(E, mu_d, T)) / (tau_s + tau_d)
+    e_dist = lambda E: f(E, mu_s, T) - f(E, mu_d, T)
     g_dist = lambda E: g(E - U, 0)
     integral = quad(lambda E: e_dist(E) * g_dist(E), -infty, infty)[0]
     return integral
