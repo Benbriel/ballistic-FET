@@ -4,13 +4,13 @@ from scipy.constants import k, e, hbar, eV
 import matplotlib.pyplot as plt
 
 # Define Constants
-# hbar /= eV                                  # eV*s
+hbar /= eV                                  # eV*s
 nm = 1e-9                                   # m
 Length = 40 * nm                            # m
 Width = 3 * Length                          # m
 A = Length * Width                          # m^2
-E_F = -5. * eV                                   # eV
-E_C = -4.7 * eV                                  # eV
+E_F = -5.                                   # eV
+E_C = -4.7                                  # eV
 # tau_d = tau_s -> 0. tal que tau_d / tau_s -> 1
 C_es = C_G = 0.1 * 1e-15                    # F
 T_array = np.array([1., 298])               # K
@@ -19,9 +19,9 @@ V_G_array = np.array([.3, .35, .4, .45, .5])# V
 m_eff = 9.1 / 2 * 1e-31                     # kg
 
 # Algunas variables
-beta = lambda T: 1/(k*T)               # eV^-1
+beta = lambda T: 1/(k*T) * eV               # eV^-1
 mu_s = E_F
-mu_d = lambda _V_DS: E_F * eV + e*_V_DS     # eV
+mu_d = lambda _V_DS: E_F + e*_V_DS / eV     # eV
 
 # Para testear
 E_plot = np.linspace(-6, -2, 100000, dtype=np.longdouble)
@@ -55,8 +55,7 @@ def integrate(integrand, min_value, max_value):
     :param max_value: es el lim sup de la integral
     :return: devuelve un escalar que es el valor de la integral
     """
-    res, err = quad(integrand, min_value, max_value)
-    return res
+    return quad(integrand, min_value, max_value)[0]
 
 def calculate_N(E_min, E_max, T, U, V_DS):
     """
@@ -89,7 +88,7 @@ def calculate_U(N, N0, V_G):
     :param N: Número de electrones
     :return: Un potencial U actualizado para ser más consistente con N
     """
-    return -V_G * e + e ** 2 * (N - N0) / (C_es)
+    return -V_G + e ** 2 * (N - N0) / (C_es * eV)
 
 
 def convergence_criteria(value_before, value_now, th=1e-6):
