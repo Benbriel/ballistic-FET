@@ -125,3 +125,11 @@ def calculate_I(E: np.ndarray|float, U, T, V_DS):
     integrand2 =  f(E - mu_s, T) - f(E - mu_d(V_DS), T)
     integrand = integrand1 * integrand2
     return integrate(integrand, x=E) * e * Width / (np.pi * hbar)**2
+
+def deme_un_U_mi_Rey(V_G):
+    eta_0=1
+    V_T=(E_C-mu_s)/(eta_0*e)
+    C_Q=e**2*m_eff*Width*Length/(2*np.pi*hbar**2)
+    eta=C_G/(C_G+C_Q)
+    U=-eta*e*(V_G-V_T)-eta_0*e*V_T
+    return U

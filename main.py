@@ -1,19 +1,21 @@
 from utils import *
 from tqdm import tqdm
 
-U_guess = 0 * eV
-E_ = np.linspace(E_C + U_guess, 50*eV, 50000)
-T = 300
+U_guess = -0.311*eV
+E_ = np.linspace(E_C, 50*eV, 50000)
+T = 298
 V_DS = .5
-V_G = .5
+V_G = .4
 args = (T, V_DS, V_G)
 
-U_array = np.linspace(-100, -1, 100) * eV
-for VG in V_G_array:
-    plt.plot(V_DS_array, [calculate_I(E_, -VG, T, -V_DS) for V_DS in V_DS_array])
-plt.show()
+U_array = deme_un_U_mi_Rey(V_G_array)
+
+#for i, VG in enumerate(V_G_array):
+#    plt.plot(V_DS_array, [calculate_I(E_+U_array[i], U_array[i], T, -VDS) for VDS in V_DS_array])
+#plt.plot(V_DS_array, [calculate_I(E_, U_guess, T, -VDS) for VDS in V_DS_array])
+#plt.show()
 #print(calculate_I(E_, U_guess, T, V_DS))
-#breakpoint()
+
 N_array = []
 N0_array = []
 U_array = []
