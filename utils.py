@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.integrate import quad
 from scipy.constants import k, e, hbar, eV
 import matplotlib.pyplot as plt
 
@@ -18,9 +17,9 @@ V_G_array = np.array([.3, .35, .4, .45, .5])# V
 m_eff = 9.1 / 2 * 1e-31                     # kg
 
 # Algunas variables
-beta = lambda T: 1/(k*T)               # J^-1
+beta = lambda T: 1/(k*T)                    # J^-1
 mu_s = E_F
-mu_d = lambda _V_DS: E_F - e*_V_DS     # J
+mu_d = lambda _V_DS: E_F - e*_V_DS          # J
 
 C_Q = e**2 *m_eff*A/(2*np.pi*hbar**2)
 
@@ -73,18 +72,22 @@ def calculate_N(E: np.ndarray|float, T, U, V_DS):
     :param mu_d: potencial químido drain en eV
     :return: devuelve el valor de N calculado a partir de estadisticas Fermi-Dirac
     """
-    integrand1 = g(E-E_C-U) * f(E - mu_s, T)
-    integrand2 = g(E-E_C-U) * f(E - mu_d(V_DS), T)
+    integrand1 = g(E-E_C-U) * f(E - mu_s, T)            # N_s
+    integrand2 = g(E-E_C-U) * f(E - mu_d(V_DS), T)      # N_d
     integrand = (integrand1 + integrand2) / 2
-    #plt.plot(E, integrand)
-    #plt.plot(E, g(E-E_C-U))
-    #plt.plot(E, (f(E - mu_s, T) + f(E - mu_d(V_DS), T))q)
+    #plt.plot(E/eV, integrand1, label='N_s')
+    #plt.plot(E/eV, integrand2, label='N_d')
+    #plt.plot(E/eV, integrand, label='N')
+    #plt.vlines(E_C/eV, 0, 1, colors='r', linestyles='dashed', label='E_C')
+    #plt.vlines(E_C/eV+U/eV, 0, 1, colors='g', linestyles='dashed', label='E_C+U')
+    #plt.legend()
+    #plt.show()
     #breakpoint()
-    return integrate(integrand, x=E) * A * m_eff / (13.7*np.pi * hbar**2)
+    return integrate(integrand, x=E) * A * m_eff / (np.pi * hbar**2)
 
 
 def calculate_N0(E: np.ndarray|float, T):
-    return integrate(g(E-E_C) * f(E - E_F, T), x=E) * A * m_eff / (np.pi * hbar**2)
+    return integrate(g(E - E_C) * f(E - E_F, T), x=E) * A * m_eff / (np.pi * hbar**2)
 
 
 def calculate_U(N, N0, V_G):
@@ -95,7 +98,7 @@ def calculate_U(N, N0, V_G):
     :return: Un potencial U actualizado para ser más consistente con N
     """
     U_es = -V_G * e
-    U_C = e**2 * (N - N0) / C_es
+    U_C = e**2 * (N - N0) / C_es            # Es muy positivo :(
     return  (U_es + U_C)
 
 
@@ -116,9 +119,9 @@ def iter_alg(U, T, V_DS, V_G):
     :return: U nuevo
     """
     Emin = (E_C + U)
-    Emax = 1*eV
-    E_N = np.linspace(Emin, Emax, 100000)
-    E_N0 = np.linspace(E_C, Emax, 100000)
+    Emax = -2*eV
+    E_N = np.linspace(Emin, Emax, 10000)
+    E_N0 = np.linspace(E_C, Emax, 10000)
     N = calculate_N(E_N, T, U, V_DS)
     N0 = calculate_N0(E_N0, T)
     U_new = calculate_U(N, N0, V_G)
@@ -132,6 +135,7 @@ def calculate_I(E: np.ndarray|float, U, T, V_DS):
     return integrate(integrand, x=E) * e * Width / (np.pi * hbar)**2
 
 def deme_un_U_mi_Rey(V_G):
+    """Ojooooooo válido pa 0 K"""
     eta_0=1
     V_T=(E_C-mu_s)/(eta_0*e)
     C_Q=e**2*m_eff*Width*Length/(2*np.pi*hbar**2)

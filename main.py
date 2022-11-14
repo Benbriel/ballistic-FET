@@ -1,11 +1,11 @@
 from utils import *
 from tqdm import tqdm
 
-U_guess = -0.311*eV                                  # correcto -0.311 *eV
+U_guess = -.311*eV                                  # correcto -0.311 *eV
 E_ = np.linspace(E_C, 50*eV, 50000)
-T = 298
+T = 300
 V_DS = 0.
-V_G = .4
+V_G = 0.4
 args = (T, V_DS, V_G)
 
 U_array = deme_un_U_mi_Rey(V_G_array)
@@ -15,6 +15,16 @@ U_array = deme_un_U_mi_Rey(V_G_array)
 #plt.plot(V_DS_array, [calculate_I(E_, U_guess, T, VDS) for VDS in V_DS_array])
 #plt.show()
 #print(calculate_I(E_, U_guess, T, V_DS))
+
+# Temporal
+U_aux_array = np.linspace(-0.5*eV, -0.2*eV, 100)
+N_array = np.array([calculate_N(E_+U, T, U, V_DS) for U in U_aux_array])
+plt.plot(U_aux_array, N_array)
+plt.show()
+
+breakpoint()
+# Acá termina lo temporal
+
 
 n_iter = 1000
 N_array = np.zeros(n_iter)
@@ -34,9 +44,12 @@ print(f"U = {U_new / eV:.6f} eV")
 
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
 ax[0].plot(N_array, '.')
-ax[0].set_title("N")    
+ax[0].set_title("N")
+#ax[0].set_yscale('log')
 ax[1].plot(N0_array, '.')
 ax[1].set_title("N0")
+#ax[1].set_yscale('log')
 ax[2].plot(U_array, '.')
 ax[2].set_title("U")
+#ax[2].set_yscale('log')
 plt.show()
