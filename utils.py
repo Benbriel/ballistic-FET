@@ -18,10 +18,10 @@ m_eff = 9.1 / 2 * 1e-31                     # kg
 
 # Algunas variables
 beta = lambda T: 1/(k*T)                    # J^-1
-mu_s = E_F
+mu_s = E_F                                  # J
 mu_d = lambda _V_DS: E_F - e*_V_DS          # J
-
-C_Q = e**2 *m_eff*A/(2*np.pi*hbar**2)
+alpha = A * m_eff / (np.pi * hbar**2)       # J^-1
+C_Q = e**2 * alpha / 2
 
 
 def g(E):
@@ -75,19 +75,21 @@ def calculate_N(E: np.ndarray|float, T, U, V_DS):
     integrand1 = g(E-E_C-U) * f(E - mu_s, T)            # N_s
     integrand2 = g(E-E_C-U) * f(E - mu_d(V_DS), T)      # N_d
     integrand = (integrand1 + integrand2) / 2
-    #plt.plot(E/eV, integrand1, label='N_s')
-    #plt.plot(E/eV, integrand2, label='N_d')
-    #plt.plot(E/eV, integrand, label='N')
-    #plt.vlines(E_C/eV, 0, 1, colors='r', linestyles='dashed', label='E_C')
-    #plt.vlines(E_C/eV+U/eV, 0, 1, colors='g', linestyles='dashed', label='E_C+U')
-    #plt.legend()
-    #plt.show()
-    #breakpoint()
-    return integrate(integrand, x=E) * A * m_eff / (np.pi * hbar**2)
+    return integrate(integrand, x=E) * alpha
+
+def N_ana(U, T, V_DS):
+    return alpha * (
+        (np.log(np.exp(beta(T)*mu_s) + np.exp(beta(T)*(E_C+U))) + \
+            np.log(np.exp(beta(T)*mu_d(V_DS)) + np.exp(beta(T)*(E_C+U)))) / \
+                (2*beta(T)) - (E_C+U)
+    )
+
+def N0_ana(T):
+    return alpha * (np.log(np.exp(beta(T)*E_F) + np.exp(beta(T)*E_C)) / beta(T) - E_C)
 
 
 def calculate_N0(E: np.ndarray|float, T):
-    return integrate(g(E - E_C) * f(E - E_F, T), x=E) * A * m_eff / (np.pi * hbar**2)
+    return integrate(g(E - E_C) * f(E - E_F, T), x=E) * alpha
 
 
 def calculate_U(N, N0, V_G):
@@ -119,10 +121,12 @@ def iter_alg(U, T, V_DS, V_G):
     :return: U nuevo
     """
     Emin = (E_C + U)
-    Emax = -2*eV
+    Emax = -.1*eV
     E_N = np.linspace(Emin, Emax, 10000)
     E_N0 = np.linspace(E_C, Emax, 10000)
+    # N_an = N_ana(U, T, V_DS)
     N = calculate_N(E_N, T, U, V_DS)
+    # print(f'N_ana = {N_an:.2f}, N = {N:.2f}, error rel = {(N_an-N)/N:.2e}')
     N0 = calculate_N0(E_N0, T)
     U_new = calculate_U(N, N0, V_G)
     return N, N0, U_new
@@ -142,3 +146,8 @@ def deme_un_U_mi_Rey(V_G):
     eta=C_G/(C_G+C_Q)
     U=-eta*e*(V_G-V_T)-eta_0*e*V_T
     return U
+
+def get_U_fixed_point(U_array: np.ndarray, T, V_DS, V_G):
+    Nnew, N0new, Unew = np.array([iter_alg(U, T, V_DS, V_G) for U in U_array]).T
+    is_zero = np.diff(np.sign(Unew - U_array)) != 0
+    return Unew[1:][is_zero][0]
