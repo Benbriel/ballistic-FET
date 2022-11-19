@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.constants import k, e, hbar, eV
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # Define Constants
 nm = 1e-9                                   # m
@@ -22,6 +23,7 @@ mu_s = E_F                                  # J
 mu_d = lambda _V_DS: E_F - e*_V_DS          # J
 alpha = A * m_eff / (np.pi * hbar**2)       # J^-1
 C_Q = e**2 * alpha / 2
+E_ = lambda Emin: np.linspace(Emin, 0*eV, 10000)
 
 
 def g(E):
@@ -47,19 +49,7 @@ def f(E, T):
         ]
     )
 
-
-def integrate(integrand, x):
-    """
-    Esta función integra cualquier función capaz de recibir un escalar o np.array y la integra en los
-    límites especificados usando el método de trapecios
-    :param integrand: es el objeto de python que representa la función a integrar
-    :param min_value: es el límite inf de la integral
-    :param max_value: es el lim sup de la integral
-    :return: devuelve un escalar que es el valor de la integral
-    """
-    return np.trapz(integrand, x=x)
-
-def calculate_N(E: np.ndarray|float, T, U, V_DS):
+def calculate_N(T, U, V_DS: float):
     """
     Esta función calcula el valor de N según la ecuación (5.13), (5.15) y (5.16) del libro del curso
     :param E_min: la energía mínima por donde partir la integral, en rigor es menos infinito pero
@@ -72,10 +62,11 @@ def calculate_N(E: np.ndarray|float, T, U, V_DS):
     :param mu_d: potencial químido drain en eV
     :return: devuelve el valor de N calculado a partir de estadisticas Fermi-Dirac
     """
+    E = E_(E_C+U)
     integrand1 = g(E-E_C-U) * f(E - mu_s, T)            # N_s
     integrand2 = g(E-E_C-U) * f(E - mu_d(V_DS), T)      # N_d
     integrand = (integrand1 + integrand2) / 2
-    return integrate(integrand, x=E) * alpha
+    return np.trapz(integrand, x=E) * alpha
 
 def N_ana(U, T, V_DS):
     return alpha * (
@@ -88,8 +79,9 @@ def N0_ana(T):
     return alpha * (np.log(np.exp(beta(T)*E_F) + np.exp(beta(T)*E_C)) / beta(T) - E_C)
 
 
-def calculate_N0(E: np.ndarray|float, T):
-    return integrate(g(E - E_C) * f(E - E_F, T), x=E) * alpha
+def calculate_N0(T):
+    E = E_(E_C)
+    return np.trapz(g(E - E_C) * f(E - E_F, T), x=E) * alpha
 
 
 def calculate_U(N, N0, V_G):
@@ -100,7 +92,7 @@ def calculate_U(N, N0, V_G):
     :return: Un potencial U actualizado para ser más consistente con N
     """
     U_es = -V_G * e
-    U_C = e**2 * (N - N0) / C_es            # Es muy positivo :(
+    U_C = e**2 * (N - N0) / C_es
     return  (U_es + U_C)
 
 
@@ -114,29 +106,24 @@ def convergence_criteria(value_before, value_now, th=1e-6):
     """
     return np.abs(value_before - value_now) < th
 
-def iter_alg(U, T, V_DS, V_G):
+def iter_alg(U, T, V_DS, V_G, delta=0.005):
     """
     Esta es una iteración del algoritmo, recibe una guess y devuelve un U nuevo
     :param U: U en la iteración anterior
     :return: U nuevo
     """
-    Emin = (E_C + U)
-    Emax = -.1*eV
-    E_N = np.linspace(Emin, Emax, 10000)
-    E_N0 = np.linspace(E_C, Emax, 10000)
-    # N_an = N_ana(U, T, V_DS)
-    N = calculate_N(E_N, T, U, V_DS)
-    # print(f'N_ana = {N_an:.2f}, N = {N:.2f}, error rel = {(N_an-N)/N:.2e}')
-    N0 = calculate_N0(E_N0, T)
+    N = calculate_N(T, U, V_DS)
+    N0 = calculate_N0(T)
     U_new = calculate_U(N, N0, V_G)
-    return N, N0, U_new
+    return U + delta * (U_new - U)
 
-def calculate_I(E: np.ndarray|float, U, T, V_DS):
+def calculate_I(U, T, V_DS):
     """Funciona, no cambiar, gracias."""
+    E = E_(E_C+U)
     integrand1 = np.sqrt(2*m_eff*(E-E_C-U), where=E-E_C-U>=0) * (E-E_C-U >= 0)
     integrand2 =  f(E - mu_s, T) - f(E - mu_d(V_DS), T)
     integrand = integrand1 * integrand2
-    return integrate(integrand, x=E) * e * Width / (np.pi * hbar)**2
+    return np.trapz(integrand, x=E) * e * Width / (np.pi * hbar)**2
 
 def deme_un_U_mi_Rey(V_G):
     """Ojooooooo válido pa 0 K"""
@@ -148,6 +135,15 @@ def deme_un_U_mi_Rey(V_G):
     return U
 
 def get_U_fixed_point(U_array: np.ndarray, T, V_DS, V_G):
-    Nnew, N0new, Unew = np.array([iter_alg(U, T, V_DS, V_G) for U in U_array]).T
+    Unew = np.array([iter_alg(U, T, V_DS, V_G) for U in U_array]).T
     is_zero = np.diff(np.sign(Unew - U_array)) != 0
     return Unew[1:][is_zero][0]
+
+def get_U_iterative(U, T, V_DS, V_G, niter=2000) -> np.ndarray:
+    U_array = np.zeros(niter)
+    U_array[0] = U
+    for i in range(1, niter):
+        U = iter_alg(U, T, V_DS, V_G)
+        U_array[i] = U
+
+    return U_array
