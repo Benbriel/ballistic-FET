@@ -19,7 +19,7 @@ for j, T in enumerate(T_array):
     ax[j].set_xlabel('$V_{DS}$ [V]')
     ax[j].set_title(f'T = {T} K')
     ax[j].grid()
-ax[0].set_ylabel('$I_{DS}$ [μA]')
+ax[0].set_ylabel('$I_{DS}$ [$\mu$A]')
 
 plt.show()
 fig.savefig('img/fig_1.pdf')

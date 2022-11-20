@@ -127,11 +127,11 @@ def calculate_I(U, T, V_DS):
 
 def deme_un_U_mi_Rey(V_G):
     """Ojooooooo válido pa 0 K"""
-    eta_0=1
-    V_T=(E_C-mu_s)/(eta_0*e)
-    C_Q=e**2*m_eff*Width*Length/(2*np.pi*hbar**2)
-    eta=C_G/(C_G+C_Q)
-    U=-eta*e*(V_G-V_T)-eta_0*e*V_T
+    eta_0 = 1
+    V_T = (E_C-mu_s) / (eta_0*e)
+    C_Q = e**2 * m_eff * Width*Length / (2*np.pi*hbar**2)
+    eta = C_G / (C_G+C_Q)
+    U = -eta*e*(V_G-V_T) - eta_0*e*V_T
     return U
 
 def get_U_fixed_point(U_array: np.ndarray, T, V_DS, V_G):
