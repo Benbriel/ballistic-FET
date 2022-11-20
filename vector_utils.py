@@ -100,13 +100,14 @@ def get_new_U(U_guess, T, V_DS, V_G, delta=0.005):
 
 def iter_U(U_guess: float|np.ndarray, T: np.ndarray,
            V_DS: np.ndarray, V_G: np.ndarray, n_iter=2000, delta=0.005):
-    global U_iter
     """
     Esta función itera el algoritmo para obtener un U consistente con N
     :param U_guess: U inicial
     :param n_iter: número de iteraciones
     :return: U final
     """
+    global U_iter
+    U_iter = np.empty((n_iter, T_array.size, V_DS_array.size, V_G_array.size))
     if isinstance(U_guess, float):
         U = np.array([U_guess])[:, None, None, None]
     else:
@@ -134,7 +135,7 @@ def get_I(U, T, V_DS):
     I = np.trapz(integrand, x=E, axis=0) * e * Width / (np.pi * hbar)**2
     return I
 
-def plot_U(U):
+def plot_U(U, U_iter):
     for vg in range(len(V_G_array)):
         plt.plot(V_DS_array, U[0, 0, :, vg]/eV, label=f'$V_G$ = {V_G_array[vg]} V')
     plt.legend()
@@ -150,29 +151,3 @@ def plot_U(U):
     plt.ylabel('U [eV]')
     plt.tight_layout()
     plt.show()
-
-if __name__ == '__main__':
-    n_iter = 2000                # Es suficiente si delta = 0.01
-    U_iter = np.empty((n_iter, T_array.size, V_DS_array.size, V_G_array.size))
-    U_guess = -0.3*eV
-    if not os.path.exists('U_iter.npy'):
-        U = iter_U(U_guess, T_array, V_DS_array, V_G_array, n_iter=n_iter, delta=0.01)
-        np.save('U_iter', U_iter)
-    U_iter = np.load('U_iter.npy')
-    U = U_iter[int(4*n_iter/5):].mean(axis=0)[None, :]   # (1, 2, 100, 5)
-    I = get_I(U, T_array, V_DS_array)
-    plot_U(U)
-
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5), tight_layout=True, sharey=True)
-    for j, T in enumerate(T_array):
-        for k, VG in enumerate(V_G_array):
-            ax[j].plot(V_DS_array, I[0, j, :, k]/1e-6, label=f'$V_G$ = {VG:.2f} V')
-        ax[j].legend()
-        ax[j].set_xlabel('$V_{DS}$ [V]')
-        ax[j].set_title(f'$T$ = {T} K')
-        ax[j].grid()
-    ax[0].set_ylabel('$I_{DS}$ [$\mu$A]')
-    plt.show()
-    fig.savefig('img/fig1_1b.pdf')
-
-    breakpoint()
