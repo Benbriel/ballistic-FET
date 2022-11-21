@@ -137,7 +137,7 @@ def get_I(U, T, V_DS):
     I = np.trapz(integrand, x=E, axis=0) * e * Width / (np.pi * hbar)**2
     return I
 
-def get_I_0K(V_DS: np.ndarray, V_G: np.ndarray):
+def get_I_0K(V_DS: np.ndarray, V_G: np.ndarray, V_T=V_T):
     V_DS = V_DS[None, None, :, None]
     V_G = V_G[None, None, None, :]
     const = (e*Width)/(np.pi**2*hbar**2)*np.sqrt(8*m_eff/9)*((eta*e)**(3/2))
