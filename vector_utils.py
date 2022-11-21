@@ -13,9 +13,9 @@ E_F = -5. * eV                              # J
 E_C = -4.7 * eV                             # J
 # tau_d = tau_s -> 0. tal que tau_d / tau_s -> 1
 C_es = C_G = 0.1 * 1e-15                    # F
-T_array = np.array([1., 298])               # K
-V_DS_array = np.linspace(0, .5, 100)        # V
-V_G_array = np.array([.3, .35, .4, .45, .5])# V
+T_arr = np.array([1., 298])               # K
+V_DS_arr = np.linspace(0, .5, 100)        # V
+V_G_arr = np.array([.3, .35, .4, .45, .5])# V
 m_eff = 9.1 / 2 * 1e-31                     # kg
 
 # Algunas variables
@@ -141,14 +141,14 @@ def get_I_0K(V_DS: np.ndarray, V_G: np.ndarray):
     V_DS = V_DS[None, None, :, None]
     V_G = V_G[None, None, None, :]
     const = (e*Width)/(np.pi**2*hbar**2)*np.sqrt(8*m_eff/9)*((eta*e)**(3/2))
-    linear = (V_G-V_T)**(3/2) - (V_G-V_T-V_DS/eta) * np.sqrt(V_G-V_T-V_DS/eta, where=V_G-V_T-V_DS/eta>=0)
+    linear = (V_G-V_T)**(3/2) - np.sqrt(V_G-V_T-V_DS/eta, where=V_G-V_T-V_DS/eta>=0)**3
     sat = (V_G-V_T)**(3/2)
     is_linear = (V_DS <= eta*(V_G - V_T))
     return const * (is_linear * linear + (~is_linear) * sat)
 
-def plot_U(U, U_iter):
-    for vg in range(len(V_G_array)):
-        plt.plot(V_DS_array, U[0, 0, :, vg]/eV, label=f'$V_G$ = {V_G_array[vg]} V')
+def plot_U(U, U_iter, V_DS, V_G):
+    for vg in range(len(V_G)):
+        plt.plot(V_DS, U[0, 0, :, vg]/eV, label=f'$V_G$ = {V_G[vg]} V')
     plt.legend()
     plt.xlabel('V_DS [V]')
     plt.ylabel('U [eV]')
