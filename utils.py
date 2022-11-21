@@ -1,3 +1,6 @@
+"""
+Obsoleto, mejor usar vector_utils!!!
+"""
 import numpy as np
 from scipy.constants import k, e, hbar, eV
 import matplotlib.pyplot as plt

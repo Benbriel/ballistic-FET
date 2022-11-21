@@ -1,3 +1,8 @@
+"""
+Hecho por Benjamín Briceño, Tomás Rojas y Claudia San Martín.
+Este código toma las funciones de vector_utils.py y las utiliza
+para calcular lo pedido en el enunciado (ver README).
+"""
 from vector_utils import *
 
 def load_U_iter(filename: str, T, V_DS, V_G, U_guess=-0.3*eV, n_iter=2000):
@@ -65,7 +70,7 @@ for i, I_, I_0, V_DS in zip([0, 1], [I_b, I], [I_0K_b, I_0K], [V_DS_arr_b, V_DS_
     ax.set_ylabel('Drain Source current $I_{DS}$ [$\mu$A]')
 
     plt.show()
-#     fig.savefig(f'img/fig_b_{i}.png', dpi=300)
+    fig.savefig(f'img/fig_b_{i}.png', dpi=300)
 
 
 
@@ -113,4 +118,4 @@ ax.grid()
 ax.set_ylabel('Drain Source current $I_{DS}$ [$\mu$A]')
 
 plt.show()
-fig.savefig(f'img/fig_d.png', dpi=300)
+# fig.savefig(f'img/fig_d.png', dpi=300)
