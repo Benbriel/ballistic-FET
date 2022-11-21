@@ -1,6 +1,6 @@
 from vector_utils import *
 
-def load_U_iter(filename: str, T, V_DS, V_G, U_guess=0.3*eV, n_iter=2000):
+def load_U_iter(filename: str, T, V_DS, V_G, U_guess=-0.3*eV, n_iter=2000):
     if not os.path.exists(filename+'.npy'):
         U_iter = iter_U(U_guess, T, V_DS, V_G, n_iter=n_iter, delta=0.01)
         np.save(filename, U_iter)
@@ -46,7 +46,7 @@ for i, I_, I_0, V_DS in zip([0, 1], [I_b, I], [I_0K_b, I_0K], [V_DS_arr_b, V_DS_
         ax.plot(V_DS, I_[0, 0, :, k]/1e-6, label=f'$V_G$ = {VG:.2f} V')
     fig.gca().set_prop_cycle(None)
     for k, VG in enumerate(V_G_arr):
-        ax.plot(V_DS, I_0K[0, 0, :, k]/1e-6, "--")
+        ax.plot(V_DS, I_0[0, 0, :, k]/1e-6, "--")
     ax.legend(loc='upper right')
     ax.set_xlabel('Drain Source bias $V_{DS}$ [V]')
     ax.set_title('$T$ = 0 K')
@@ -62,7 +62,7 @@ for i, I_, I_0, V_DS in zip([0, 1], [I_b, I], [I_0K_b, I_0K], [V_DS_arr_b, V_DS_
 n_iter_c = 300
 V_G_arr_c = np.linspace(0, 1., 100)
 V_DS_arr_c = np.array([0.5])
-T_arr_c = np.array([298])
+T_arr_c = np.array([298.])
 
 U_iter_c, U_c = load_U_iter('U_iter_c', T_arr_c, V_DS_arr_c, V_G_arr_c, U_guess=U_guess, n_iter=n_iter_c)
 I_c = get_I(U_c, T_arr_c, V_DS_arr_c)
