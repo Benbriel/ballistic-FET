@@ -24,6 +24,9 @@ mu_s = E_F                                  # J
 mu_d = lambda _V_DS: E_F - e*_V_DS          # J
 alpha = A * m_eff / (np.pi * hbar**2)       # J^-1
 C_Q = e**2 * alpha / 2
+eta = C_G / (C_G + C_Q)
+eta_0 = 1
+V_T = (E_C - mu_s) / (eta_0 * e)
 E_ = lambda Emin: np.linspace(Emin, 0*eV, 1000)
 
 def g(E):
@@ -106,8 +109,7 @@ def iter_U(U_guess: float|np.ndarray, T: np.ndarray,
     :param n_iter: número de iteraciones
     :return: U final
     """
-    global U_iter
-    U_iter = np.empty((n_iter, T_array.size, V_DS_array.size, V_G_array.size))
+    U_iter = np.empty((n_iter, T.size, V_DS.size, V_G.size))
     if isinstance(U_guess, float):
         U = np.array([U_guess])[:, None, None, None]
     else:
@@ -116,7 +118,7 @@ def iter_U(U_guess: float|np.ndarray, T: np.ndarray,
     for i in tqdm(range(n_iter)):
         U = get_new_U(U, T, V_DS, V_G, delta=delta)
         U_iter[i] = U[0]
-    return U
+    return U_iter
 
 def get_I(U, T, V_DS):
     """
@@ -134,6 +136,15 @@ def get_I(U, T, V_DS):
     integrand = integrand1 * integrand2
     I = np.trapz(integrand, x=E, axis=0) * e * Width / (np.pi * hbar)**2
     return I
+
+def get_I_0K(V_DS: np.ndarray, V_G: np.ndarray):
+    V_DS = V_DS[None, None, :, None]
+    V_G = V_G[None, None, None, :]
+    const = (e*Width)/(np.pi**2*hbar**2)*np.sqrt(8*m_eff/9)*((eta*e)**(3/2))
+    linear = (V_G-V_T)**(3/2) - (V_G-V_T-V_DS/eta) * np.sqrt(V_G-V_T-V_DS/eta, where=V_G-V_T-V_DS/eta>=0)
+    sat = (V_G-V_T)**(3/2)
+    is_linear = (V_DS <= eta*(V_G - V_T))
+    return const * (is_linear * linear + (~is_linear) * sat)
 
 def plot_U(U, U_iter):
     for vg in range(len(V_G_array)):
