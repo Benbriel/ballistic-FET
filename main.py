@@ -82,19 +82,19 @@ T_arr_c = np.array([298.])
 
 U_iter_c, U_c = load_U_iter('U_iter_c', T_arr_c, V_DS_arr_c, V_G_arr_c, U_guess=U_guess, n_iter=n_iter_c)
 I_c = get_I(U_c, T_arr_c, V_DS_arr_c)
-g_m = np.diff(np.log10(I_c[0, 0, 0, :])) / np.diff(V_G_arr_c)
+g_m = np.diff(I_c[0, 0, 0, :]) / np.diff(V_G_arr_c)
+# I_ds / g_m = k T / q
+# I_c[0, 0, 0, 1:] / g_m /np.log10(np.e) = k T / q en el límite de V_G -> 0
 
 fig, ax = plt.subplots(figsize=(5, 5), tight_layout=True)
 ax.plot(V_G_arr_c, I_c[0, 0, 0, :], label=f'$V_{{DS}}$ = {V_DS_arr_c[0]:.2f} V')
-# plot the derivative
-# ax.plot(V_G_arr_c[1:], np.log10(1/g_m), label=f'$g_m$')
+ax.plot(V_G_arr_c, I_c[0, 0, 0, 0] * np.exp(e*beta(T)*V_G_arr_c), "--")
 ax.legend()
 ax.set_xlabel('Gate bias $V_G$ [V]')
 ax.set_ylabel('Drain Source current $I_{DS}$ [A]')
 ax.set_title(f'$T$ = {T_arr_c[0]} K')
 ax.grid()
 ax.set_yscale('log')
-# ax.text(0.05, 0.01, f'$g_{{m}}$ = {:.2}')
 # fig.savefig('img/fig_c.png', dpi=300)
 
 plt.show()
